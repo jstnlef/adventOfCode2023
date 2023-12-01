@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="**\*.txt" Exclude="bin">
+    <Compile Include="**\*.fs"/>
+    <Content Include="**\*.txt" Exclude="bin\**\*.txt;obj\**\*.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Remove="bin\**\*.txt;obj\**\*.txt"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -27,20 +27,5 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Update="FSharp.Core" Version="8.0.100"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Day1\Program.fs"/>
-    <Compile Include="Day1\Tests.fs"/>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Include="Day2\Program.fs"/>
-    <Compile Include="Day2\Tests.fs"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Day3\Program.fs"/>
-    <Compile Include="Day3\Tests.fs"/>
   </ItemGroup>
 </Project>
