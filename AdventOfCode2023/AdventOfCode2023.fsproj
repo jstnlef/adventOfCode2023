@@ -34,4 +34,8 @@
     <PackageReference Update="FSharp.Core" Version="8.0.100"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="Day2\Program.fs"/>
+    <Compile Include="Day2\Tests.fs"/>
+  </ItemGroup>
 </Project>
