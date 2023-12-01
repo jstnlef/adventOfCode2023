@@ -4,6 +4,7 @@ open Xunit
 
 [<Theory>]
 [<InlineData("Day1/testInput.txt", 142)>]
-[<InlineData("Day1/input.txt", 66487)>]
-let ``My test`` (filename: string, expected: int) =
-    Assert.True(false)
+[<InlineData("Day1/input.txt", 55712)>]
+let ``The sum of calibration values`` (filename: string, expected: int) =
+  let result = CalibrationDocument.parse filename |> Seq.sum
+  Assert.Equal(expected, result)
