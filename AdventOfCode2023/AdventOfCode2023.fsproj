@@ -9,11 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Day1\Program.fs"/>
-    <Compile Include="Day1\Tests.fs"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="**\*.txt" Exclude="bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -35,7 +30,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Day1\Program.fs"/>
+    <Compile Include="Day1\Tests.fs"/>
+  </ItemGroup>
+  
+  <ItemGroup>
     <Compile Include="Day2\Program.fs"/>
     <Compile Include="Day2\Tests.fs"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Day3\Program.fs"/>
+    <Compile Include="Day3\Tests.fs"/>
   </ItemGroup>
 </Project>
