@@ -8,7 +8,7 @@ open Xunit
 let ``The sum of calibration values`` (filename: string, expected: int) =
   let result =
     filename
-    |> CalibrationDocument.parse CalibrationDocument.transformOnlyDigits
+    |> CalibrationDocument.parse CalibrationDocumentTransforms.onlyDigits
     |> Seq.sum
 
   Assert.Equal(expected, result)
@@ -20,7 +20,7 @@ let ``The sum of calibration values`` (filename: string, expected: int) =
 let ``The sum of calibration values with word digits`` (filename: string, expected: int) =
   let result =
     filename
-    |> CalibrationDocument.parse CalibrationDocument.transformWithWordDigits
+    |> CalibrationDocument.parse CalibrationDocumentTransforms.withWordDigits
     |> Seq.sum
 
   Assert.Equal(expected, result)

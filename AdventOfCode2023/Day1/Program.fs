@@ -8,6 +8,14 @@ type CalibrationValue = int
 type CalibrationDocument = int seq
 
 module CalibrationDocument =
+  let parse predicate filename : CalibrationDocument =
+    let findValue (transform: string -> string) line =
+      let digits = line |> transform
+      String [| digits[0]; digits[digits.Length - 1] |] |> Int32.Parse
+
+    File.ReadLines filename |> Seq.map (findValue predicate)
+
+module CalibrationDocumentTransforms =
   let wordDigits =
     Map["one", '1'
         "two", '2'
@@ -19,9 +27,9 @@ module CalibrationDocument =
         "eight", '8'
         "nine", '9']
 
-  let transformOnlyDigits = (String.filter Char.IsDigit)
+  let onlyDigits = (String.filter Char.IsDigit)
 
-  let transformWithWordDigits (s: String) =
+  let withWordDigits (s: String) =
     let findWordDigit (subString: string) =
       wordDigits.Keys
       |> Seq.tryFind subString.StartsWith
@@ -38,10 +46,3 @@ module CalibrationDocument =
         | None -> ()
 
     String(ret.ToArray())
-
-  let parse predicate filename : CalibrationDocument =
-    let findValue (transform: string -> string) line =
-      let digits = line |> transform
-      String [| digits[0]; digits[digits.Length - 1] |] |> Int32.Parse
-
-    File.ReadLines filename |> Seq.map (findValue predicate)
