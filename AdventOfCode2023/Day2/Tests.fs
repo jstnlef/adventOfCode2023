@@ -11,8 +11,14 @@ let ``Sum of the ids of the possible games`` (filename: string, expected: int) =
 
 
 [<Theory>]
-[<InlineData("Day2/testInput.txt", 0)>]
-[<InlineData("Day2/input.txt", 0)>]
-let ``test 2`` (filename: string, expected: int) =
-  let result = -1
+[<InlineData("Day2/testInput.txt", 2286)>]
+[<InlineData("Day2/input.txt", 78669)>]
+let ``Sum of powers of the fewest number of cubes of each color`` (filename: string, expected: int) =
+  let result =
+    filename
+    |> Games.parse
+    |> Games.findFewestNumberOfCubes
+    |> Seq.map Cubes.multiply
+    |> Seq.sum
+
   Assert.Equal(expected, result)

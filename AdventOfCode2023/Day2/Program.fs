@@ -9,35 +9,51 @@ type Color =
   | Green
   | Blue
 
+module Colors =
+  let all = [| Red; Green; Blue |]
+
 type CubeSet = { num: int; color: Color }
 
 type Game = { id: int; cubes: CubeSet array }
 
+type Cubes = { red: int; green: int; blue: int }
+
+module Cubes =
+  let multiply cube = cube.red * cube.green * cube.blue
+
 module Games =
-  let totalRedCubes = 12
-  let totalGreenCubes = 13
-  let totalBlueCubes = 14
-
-  let gameRegex =
-    Regex("^Game (?<id>\d+):(?<set>( (?<num>\d+) (?<color>\w+),*)+;?)+$")
-
   let maxCubesForColor color =
     match color with
-    | Red -> totalRedCubes
-    | Green -> totalGreenCubes
-    | Blue -> totalBlueCubes
+    | Red -> 12
+    | Green -> 13
+    | Blue -> 14
 
-  let colorDiceIsReasonable game color =
+  let colorCubesIsReasonable game color =
     game.cubes
     |> Array.filter (fun c -> c.color = color)
     |> Array.forall (fun c -> c.num <= maxCubesForColor color)
 
   let gameIsPossible game =
-    let allColors = [| Red; Green; Blue |]
-    allColors |> Array.forall (colorDiceIsReasonable game)
+    Colors.all |> Array.forall (colorCubesIsReasonable game)
 
   let findPossibleGames games =
     games |> Seq.filter gameIsPossible |> Seq.map (fun game -> game.id)
+
+  let findFewestCubeForColor game color =
+    game.cubes
+    |> Array.filter (fun c -> c.color = color)
+    |> Array.map (fun c -> c.num)
+    |> Array.max
+
+  let findFewestCubesForGame game =
+    { red = findFewestCubeForColor game Red
+      green = findFewestCubeForColor game Green
+      blue = findFewestCubeForColor game Blue }
+
+  let findFewestNumberOfCubes games : Cubes seq = games |> Seq.map findFewestCubesForGame
+
+  let gameRegex =
+    Regex("^Game (?<id>\d+):(?<set>( (?<num>\d+) (?<color>\w+),*)+;?)+$")
 
   let parse filename : Game seq =
     let parseLine line =
