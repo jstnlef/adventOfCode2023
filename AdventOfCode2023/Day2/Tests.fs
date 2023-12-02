@@ -6,9 +6,13 @@ open Xunit
 [<InlineData("Day2/testInput.txt", 8)>]
 [<InlineData("Day2/input.txt", 2283)>]
 let ``Sum of the ids of the possible games`` (filename: string, expected: int) =
-  let result = filename |> Games.parse |> Games.findPossibleGameIds |> Seq.sum
-  Assert.Equal(expected, result)
+  let result =
+    filename
+    |> Games.parse
+    |> Seq.filter Games.gameIsPossible
+    |> Seq.sumBy (fun g -> g.id)
 
+  Assert.Equal(expected, result)
 
 [<Theory>]
 [<InlineData("Day2/testInput.txt", 2286)>]

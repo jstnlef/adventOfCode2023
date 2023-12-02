@@ -9,8 +9,15 @@ type Color =
   | Green
   | Blue
 
-module Colors =
+module Color =
   let all = [| Red; Green; Blue |]
+
+  let fromString s =
+    match s with
+    | "red" -> Red
+    | "green" -> Green
+    | "blue" -> Blue
+    | _ -> failwith "Unrecognized color"
 
 type CubeSet = { num: int; color: Color }
 
@@ -28,27 +35,24 @@ module Games =
     | Green -> 13
     | Blue -> 14
 
-  let colorCubesIsReasonable game color =
+  let numberOfCubesAreLessThanMax game color =
     game.cubes
     |> Array.filter (fun c -> c.color = color)
     |> Array.forall (fun c -> c.num <= maxCubesForColor color)
 
   let gameIsPossible game =
-    Colors.all |> Array.forall (colorCubesIsReasonable game)
+    Color.all |> Array.forall (numberOfCubesAreLessThanMax game)
 
-  let findPossibleGameIds games =
-    games |> Seq.filter gameIsPossible |> Seq.map (fun game -> game.id)
-
-  let findFewestCubesForColor game color =
+  let findFewestCubesForColor color game =
     game.cubes
     |> Array.filter (fun c -> c.color = color)
     |> Array.map (fun c -> c.num)
     |> Array.max
 
   let findFewestCubes game =
-    { red = findFewestCubesForColor game Red
-      green = findFewestCubesForColor game Green
-      blue = findFewestCubesForColor game Blue }
+    { red = findFewestCubesForColor Red game
+      green = findFewestCubesForColor Green game
+      blue = findFewestCubesForColor Blue game }
 
   let gameRegex =
     Regex("^Game (?<id>\d+):(?<set>( (?<num>\d+) (?<color>\w+),*)+;?)+$")
@@ -57,20 +61,13 @@ module Games =
     let parseLine line =
       let m = gameRegex.Match(line)
       let id = Int32.Parse(m.Groups["id"].Value)
-      let zipped = (Seq.zip m.Groups["num"].Captures m.Groups["color"].Captures)
+      let zipped = Seq.zip m.Groups["num"].Captures m.Groups["color"].Captures
 
       let cubes =
         zipped
         |> Seq.map (fun (num, color) ->
-          let colorType =
-            match color.Value with
-            | "red" -> Red
-            | "green" -> Green
-            | "blue" -> Blue
-            | _ -> failwith "Unrecognized color"
-
-          { num = Int32.Parse(num.Value)
-            color = colorType })
+          { num = Int32.Parse num.Value
+            color = Color.fromString color.Value })
         |> Seq.toArray
 
       { id = id; cubes = cubes }
