@@ -27,7 +27,7 @@ module CalibrationDocumentTransforms =
         "eight", '8'
         "nine", '9']
 
-  let onlyDigits = (String.filter Char.IsDigit)
+  let onlyDigits = String.filter Char.IsDigit
 
   let withWordDigits (s: String) =
     let findWordDigit (subString: string) =
