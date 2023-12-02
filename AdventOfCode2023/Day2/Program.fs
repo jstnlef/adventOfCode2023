@@ -36,21 +36,19 @@ module Games =
   let gameIsPossible game =
     Colors.all |> Array.forall (colorCubesIsReasonable game)
 
-  let findPossibleGames games =
+  let findPossibleGameIds games =
     games |> Seq.filter gameIsPossible |> Seq.map (fun game -> game.id)
 
-  let findFewestCubeForColor game color =
+  let findFewestCubesForColor game color =
     game.cubes
     |> Array.filter (fun c -> c.color = color)
     |> Array.map (fun c -> c.num)
     |> Array.max
 
-  let findFewestCubesForGame game =
-    { red = findFewestCubeForColor game Red
-      green = findFewestCubeForColor game Green
-      blue = findFewestCubeForColor game Blue }
-
-  let findFewestNumberOfCubes games : Cubes seq = games |> Seq.map findFewestCubesForGame
+  let findFewestCubes game =
+    { red = findFewestCubesForColor game Red
+      green = findFewestCubesForColor game Green
+      blue = findFewestCubesForColor game Blue }
 
   let gameRegex =
     Regex("^Game (?<id>\d+):(?<set>( (?<num>\d+) (?<color>\w+),*)+;?)+$")
