@@ -1,7 +1,6 @@
 namespace Day4
 
 open System
-open System.Collections.Generic
 open System.IO
 open System.Text.RegularExpressions
 
@@ -13,22 +12,27 @@ type ScratchCard =
 module ScratchCard =
   let matchingSet card = Set.intersect card.winning card.mine
 
-  let score card = pown 2 ((matchingSet card).Count - 1)
+  let matchingSetCount card = (matchingSet card).Count
+
+  let score card = pown 2 ((matchingSetCount card) - 1)
 
 type ScratchCards = ScratchCard array
 
 module ScratchCards =
   let determineCopies scratchcards =
-    let cardCounts = Dictionary<int, int>()
+    let updateCardCount sourceId (counts: Map<int, int>) copiedId =
+      Map.add copiedId (counts[copiedId] + counts[sourceId]) counts
 
-    for card in scratchcards do
-      cardCounts[card.id] <- 1
+    let countCopies counts card =
+      seq { card.id + 1 .. card.id + (ScratchCard.matchingSetCount card) }
+      |> Seq.fold (updateCardCount card.id) counts
 
-    for card in scratchcards do
-      for i in card.id + 1 .. card.id + (ScratchCard.matchingSet card).Count do
-        cardCounts[i] <- cardCounts[i] + cardCounts[card.id]
+    let initialCardCounts =
+      scratchcards |> Seq.fold (fun counts card -> Map.add card.id 1 counts) Map.empty
 
-    Seq.sum cardCounts.Values
+    scratchcards
+    |> Seq.fold countCopies initialCardCounts
+    |> Seq.sumBy (fun pair -> pair.Value)
 
   let private regex =
     Regex("^Card +(?<id>\d+): +(?<winning>\d+ *)+\| +(?<mine>\d+ *)+$")
