@@ -11,8 +11,8 @@ let ``Total points of the winning scratchcards`` (filename: string, expected: in
 
 
 [<Theory>]
-[<InlineData("Day4/testInput.txt", -1)>]
-[<InlineData("Day4/input.txt", -1)>]
-let ``test 2`` (filename: string, expected: int) =
-  let result = 0
+[<InlineData("Day4/testInput.txt", 30)>]
+[<InlineData("Day4/input.txt", 5921508)>]
+let ``Total number of scratchcards after copies`` (filename: string, expected: int) =
+  let result = filename |> ScratchCards.parse |> ScratchCards.determineCopies
   Assert.Equal(expected, result)
