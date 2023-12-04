@@ -11,21 +11,21 @@ type ScratchCard =
     mine: int Set }
 
 module ScratchCard =
-  let matching card = Set.intersect card.winning card.mine
+  let matchingSet card = Set.intersect card.winning card.mine
 
-  let score card = pown 2 ((matching card).Count - 1)
+  let score card = pown 2 ((matchingSet card).Count - 1)
 
 type ScratchCards = ScratchCard array
 
 module ScratchCards =
   let determineCopies scratchcards =
     let cardCounts = Dictionary<int, int>()
-    scratchcards |> Seq.iter (fun c -> cardCounts[c.id] <- 1)
 
     for card in scratchcards do
-      let matched = (ScratchCard.matching card).Count
+      cardCounts[card.id] <- 1
 
-      for i in card.id + 1 .. card.id + matched do
+    for card in scratchcards do
+      for i in card.id + 1 .. card.id + (ScratchCard.matchingSet card).Count do
         cardCounts[i] <- cardCounts[i] + cardCounts[card.id]
 
     Seq.sum cardCounts.Values
@@ -34,17 +34,14 @@ module ScratchCards =
     Regex("^Card +(?<id>\d+): +(?<winning>\d+ *)+\| +(?<mine>\d+ *)+$")
 
   let parse filename : ScratchCards =
+    let groupToSet (group: Group) =
+      group.Captures |> Seq.map (fun c -> Int32.Parse(c.Value)) |> Set
+
     let parseLine line : ScratchCard =
       let m = regex.Match line
 
-      let winning =
-        m.Groups["winning"].Captures |> Seq.map (fun c -> Int32.Parse(c.Value)) |> Set
-
-      let mine =
-        m.Groups["mine"].Captures |> Seq.map (fun c -> Int32.Parse(c.Value)) |> Set
-
       { id = Int32.Parse(m.Groups["id"].Value)
-        winning = winning
-        mine = mine }
+        winning = groupToSet m.Groups["winning"]
+        mine = groupToSet m.Groups["mine"] }
 
     filename |> File.ReadLines |> Seq.map parseLine |> Seq.toArray
