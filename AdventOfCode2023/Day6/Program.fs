@@ -7,12 +7,10 @@ open System.Text.RegularExpressions
 type Race = int64 * int64
 
 type RaceDocument =
-  { times: int64 array
-    distances: int64 array }
+  { times: int64 seq
+    distances: int64 seq }
 
 module RaceDocument =
-  let distanceForHeldTime time heldTime = (time - heldTime) * heldTime
-
   let numWaysToBeatRecord (time, distance) =
     // Good old quadratic formula :)
     let t = float time
@@ -22,26 +20,13 @@ module RaceDocument =
     int (Math.Ceiling(h1) - Math.Floor(h2) - 1.0)
 
   let multipliedNumOfWaysToBeatRecord doc =
-    Array.zip doc.times doc.distances
-    |> Array.map numWaysToBeatRecord
-    |> Array.fold (*) 1
+    Seq.zip doc.times doc.distances |> Seq.map numWaysToBeatRecord |> Seq.fold (*) 1
 
   let parseOneRace filename =
-    let regex = Regex("\w+:( +(?<num>\d+))+")
     let lines = filename |> File.ReadAllLines
-
-    let time =
-      regex.Match(lines[0]).Groups["num"].Captures
-      |> (fun captures -> String.Join("", captures))
-      |> Int64.Parse
-
-    let distance =
-      regex.Match(lines[1]).Groups["num"].Captures
-      |> (fun captures -> String.Join("", captures))
-      |> Int64.Parse
-
+    let time = Regex.Replace(lines[0].Split(":")[1], @"\s", "") |> Int64.Parse
+    let distance = Regex.Replace(lines[1].Split(":")[1], @"\s", "") |> Int64.Parse
     (time, distance)
-
 
   let parse filename =
     let regex = Regex("\w+:( +(?<num>\d+))+")
@@ -50,11 +35,9 @@ module RaceDocument =
     let times =
       regex.Match(lines[0]).Groups["num"].Captures
       |> Seq.map (fun c -> Int64.Parse(c.Value))
-      |> Seq.toArray
 
     let distances =
       regex.Match(lines[1]).Groups["num"].Captures
       |> Seq.map (fun c -> Int64.Parse(c.Value))
-      |> Seq.toArray
 
     { times = times; distances = distances }
