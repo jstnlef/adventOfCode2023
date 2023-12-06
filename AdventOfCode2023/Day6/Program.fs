@@ -11,8 +11,6 @@ type RaceDocument =
     distances: int64 array }
 
 module RaceDocument =
-  let getRace id doc : Race = doc.times[id], doc.distances[id]
-
   let distanceForHeldTime time heldTime = (time - heldTime) * heldTime
 
   let numWaysToBeatRecord (time, distance) =
