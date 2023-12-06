@@ -17,12 +17,14 @@ module RaceDocument =
     let lower =
       seq { (time / 2L) - 1L .. -1L .. 0L }
       |> Seq.takeWhile (fun heldTime -> distanceForHeldTime time heldTime > distance)
+      |> Seq.length
 
     let upper =
       seq { time / 2L .. time }
       |> Seq.takeWhile (fun heldTime -> distanceForHeldTime time heldTime > distance)
+      |> Seq.length
 
-    Seq.append lower upper |> Seq.toList |> (fun l -> l.Length)
+    lower + upper
 
   let multipliedNumOfWaysToBeatRecord doc =
     Array.zip doc.times doc.distances
@@ -46,7 +48,7 @@ module RaceDocument =
     (time, distance)
 
 
-  let parse filename : RaceDocument =
+  let parse filename =
     let regex = Regex("\w+:( +(?<num>\d+))+")
     let lines = filename |> File.ReadAllLines
 
