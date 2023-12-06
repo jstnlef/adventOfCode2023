@@ -14,17 +14,12 @@ module RaceDocument =
   let distanceForHeldTime time heldTime = (time - heldTime) * heldTime
 
   let numWaysToBeatRecord (time, distance) =
-    let lower =
-      seq { (time / 2L) - 1L .. -1L .. 0L }
-      |> Seq.takeWhile (fun heldTime -> distanceForHeldTime time heldTime > distance)
-      |> Seq.length
-
-    let upper =
-      seq { time / 2L .. time }
-      |> Seq.takeWhile (fun heldTime -> distanceForHeldTime time heldTime > distance)
-      |> Seq.length
-
-    lower + upper
+    // Good old quadratic formula :)
+    let t = float time
+    let d = float distance
+    let h1 = (t + Math.Sqrt(Math.Pow(t, 2) - 4.0 * d)) / 2.0
+    let h2 = (t - Math.Sqrt(Math.Pow(t, 2) - 4.0 * d)) / 2.0
+    int (Math.Ceiling(h1) - Math.Floor(h2) - 1.0)
 
   let multipliedNumOfWaysToBeatRecord doc =
     Array.zip doc.times doc.distances
