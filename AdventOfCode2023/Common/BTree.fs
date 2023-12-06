@@ -1,5 +1,7 @@
 module Common.BTree
 
+open System
+
 type Node<'a, 'b> =
   { Key: 'a
     Value: 'b
@@ -42,14 +44,8 @@ let rec searchTreeBy compareFunc =
     else
       searchTreeBy compareFunc node.Right
 
-// let rec searchTree (value: 'b) =
-//   searchTreeBy (fun (key: 'a) -> key.CompareTo(value))
-// function
-// | Tree.Empty -> None
-// | Node node ->
-//   if value = node.Key then Some node.Value
-//   elif value < node.Key then searchTree value node.Left
-//   else searchTree value node.Right
+let rec searchTree (value: 'b) =
+  searchTreeBy (fun (key: 'a) -> (key :> IComparable).CompareTo(value))
 
 let rec between minValue maxValue tree =
   seq {

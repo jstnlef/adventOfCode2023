@@ -52,18 +52,26 @@ module Almanac =
   let findLowestLocation almanac =
     almanac.seeds |> Seq.map (findLocation almanac) |> Seq.min
 
-  let parse filename =
-    let mapRegex = Regex("(?<name>[\w|\-?]+) map:\n((?<range>\d+ ?)\n?)+")
-
-    let lines = filename |> File.ReadAllText |> (fun s -> s.Split("\n\n"))
-
+  let parseIndividualSeeds (line: string) =
     let parseLineToIn64Set (s: string) =
       s.Trim().Split [| ' ' |] |> Array.map Int64.Parse |> Set
 
-    let parseSeeds (line: string) =
-      (line.Split [| ':' |])[1] |> parseLineToIn64Set
+    (line.Split [| ':' |])[1] |> parseLineToIn64Set
 
-    let seeds = parseSeeds lines[0]
+  let parseSeedRanges (line: string) =
+    let parseLineToRanges (s: string) =
+      s.Trim().Split [| ' ' |]
+      |> Array.map Int64.Parse
+      |> Array.chunkBySize 2
+      |> Array.map (fun chunk -> Range(chunk[0], chunk[1]))
+
+    (line.Split [| ':' |])[1] |> parseLineToRanges
+
+  let parse seedParseFun filename =
+    let mapRegex = Regex("(?<name>[\w|\-?]+) map:\n((?<range>\d+ ?)\n?)+")
+    let lines = filename |> File.ReadAllText |> (fun s -> s.Split("\n\n"))
+
+    let seeds = seedParseFun lines[0]
 
     let parseMap (mapText: string) =
       let m = mapRegex.Match(mapText)
