@@ -4,7 +4,7 @@ open Xunit
 
 [<Theory>]
 [<InlineData("Day7/testInput.txt", 6440)>]
-[<InlineData("Day7/input.txt", -1)>]
+[<InlineData("Day7/input.txt", 256448566)>]
 let ``The total winnings of the Camel Cards hands`` (filename: string, expected: int) =
   let result = filename |> CamelHands.parse |> CamelHands.totalWinnings
   Assert.Equal(expected, result)
