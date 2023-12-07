@@ -18,7 +18,7 @@ type Type =
 
 module Hand =
   let countCards (hand: Hand) =
-    hand.ToCharArray()
+    hand
     |> Seq.fold
       (fun counts c ->
         counts
@@ -28,28 +28,20 @@ module Hand =
           | None -> Some(1)))
       Map.empty
 
-  let kindWithJacks (hand: Hand) =
-    let counts = countCards hand |> Map.toArray |> Array.sortByDescending snd
-
-    match counts[0] with
-    | _, count when count = 5 -> Type.FiveOfAKind
-    | _, count when count = 4 -> Type.FourOfAKind
-    | _, count when count = 3 && (snd counts[1]) = 2 -> Type.FullHouse
-    | _, count when count = 3 -> Type.ThreeOfAKind
-    | _, count when count = 2 && (snd counts[1]) = 2 -> Type.TwoPair
-    | _, count when count = 2 -> Type.OnePair
+  let kindByCounts jokers (counts: (char * int) array) =
+    match (counts[0] |> snd) with
+    | count when (count + jokers) = 5 -> Type.FiveOfAKind
+    | count when (count + jokers) = 4 -> Type.FourOfAKind
+    | count when (count + jokers) = 3 && (counts[1] |> snd) = 2 -> Type.FullHouse
+    | count when (count + jokers) = 3 -> Type.ThreeOfAKind
+    | count when (count + jokers) = 2 && (counts[1] |> snd) = 2 -> Type.TwoPair
+    | count when (count + jokers) = 2 -> Type.OnePair
     | _ -> Type.HighCard
 
-  let cardValueWithJacks card =
-    match card with
-    | 'A' -> 14
-    | 'K' -> 13
-    | 'Q' -> 12
-    | 'J' -> 11
-    | 'T' -> 10
-    | c -> Int32.Parse(string c)
+  let kindWithJacks hand =
+    kindByCounts 0 (countCards hand |> Map.toArray |> Array.sortByDescending snd)
 
-  let kindWithJokers (hand: Hand) =
+  let kindWithJokers hand =
     let counts = countCards hand
     let jokerCount = counts |> Map.tryFind 'J' |> Option.defaultValue 0
 
@@ -62,48 +54,42 @@ module Hand =
         |> Map.toArray
         |> Array.sortByDescending snd
 
-      match sortedCounts[0] with
-      | _, count when (count + jokerCount) = 5 -> Type.FiveOfAKind
-      | _, count when (count + jokerCount) = 4 -> Type.FourOfAKind
-      | _, count when (count + jokerCount) = 3 && (snd sortedCounts[1]) = 2 -> Type.FullHouse
-      | _, count when (count + jokerCount) = 3 -> Type.ThreeOfAKind
-      | _, count when (count + jokerCount) = 2 && (snd sortedCounts[1]) = 2 -> Type.TwoPair
-      | _, count when (count + jokerCount) = 2 -> Type.OnePair
-      | _ -> Type.HighCard
-
-  let cardValueWithJokers card =
-    match card with
-    | 'A' -> 14
-    | 'K' -> 13
-    | 'Q' -> 12
-    | 'T' -> 10
-    | 'J' -> 1
-    | c -> Int32.Parse(string c)
+      kindByCounts jokerCount sortedCounts
 
   let compareHighCards (cardEval: char -> int) (hand: Hand) (otherHand: Hand) =
     let compareCards (card, otherCard) =
       (cardEval card).CompareTo(cardEval otherCard)
 
-    Seq.zip (hand.ToCharArray()) (otherHand.ToCharArray())
-    |> Seq.tryFind (fun cards -> compareCards cards <> 0)
-    |> Option.map compareCards
+    Seq.zip hand otherHand
+    |> Seq.map compareCards
+    |> Seq.tryFind (fun c -> c <> 0)
     |> Option.defaultValue 0
 
   let strength kindEval cardEval hand otherHand =
-    let compareType = (hand |> kindEval |> int).CompareTo(otherHand |> kindEval |> int)
+    let handStrength = hand |> kindEval |> int
+    let otherHandStrength = otherHand |> kindEval |> int
+    let typeStrength = handStrength.CompareTo(otherHandStrength)
 
-    if compareType <> 0 then
-      compareType
+    if typeStrength <> 0 then
+      typeStrength
     else
       compareHighCards cardEval hand otherHand
 
   let score rank (_, bid) = bid * (rank + 1)
 
-  let strengthWithJacks: (Hand -> Hand -> int) =
-    strength kindWithJacks cardValueWithJacks
+  let cardValue jValue card =
+    match card with
+    | 'A' -> 14
+    | 'K' -> 13
+    | 'Q' -> 12
+    | 'J' -> jValue
+    | 'T' -> 10
+    | c -> int c - int '0'
+
+  let strengthWithJacks: (Hand -> Hand -> int) = strength kindWithJacks (cardValue 11)
 
   let strengthWithJokers: (Hand -> Hand -> int) =
-    strength kindWithJokers cardValueWithJokers
+    strength kindWithJokers (cardValue 1)
 
 module CamelHands =
   let totalWinnings handEval (hands: CamelHands) =
