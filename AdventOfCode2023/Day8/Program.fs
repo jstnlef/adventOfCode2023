@@ -13,6 +13,8 @@ module WastelandMap =
   let startNode = "AAA"
   let endNode = "ZZZ"
 
+  let findAllWaysOut (map: WastelandMap) = 0
+
   let findWayOut (map: WastelandMap) =
     let mutable current = startNode
     let mutable steps = 0
