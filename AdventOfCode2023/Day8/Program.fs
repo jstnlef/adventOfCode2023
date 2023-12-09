@@ -10,17 +10,12 @@ type WastelandMap =
     network: Network }
 
 module WastelandMap =
-  let startNode = "AAA"
-  let endNode = "ZZZ"
-
-  let findAllWaysOut (map: WastelandMap) = 0
-
-  let findWayOut (map: WastelandMap) =
+  let findWayOut startNode endCheck (map: WastelandMap) : int64 =
     let mutable current = startNode
     let mutable steps = 0
     let mutable index = 0
 
-    while current <> endNode do
+    while not (endCheck current) do
       let instruction = map.instructions[index]
       let left, right = map.network[current]
 
@@ -33,6 +28,21 @@ module WastelandMap =
       steps <- steps + 1
 
     steps
+
+  let findAllWaysOut (map: WastelandMap) =
+    let rec gcd =
+      function
+      | 0L, (n: int64) -> n
+      | m: int64, (n: int64) -> gcd ((n % m), m)
+
+    let lcm a b = (a * b) / (gcd (a, b))
+
+    let mutable stepsToFinish =
+      map.network.Keys
+      |> Seq.filter (fun s -> s.EndsWith("A"))
+      |> Seq.map (fun start -> findWayOut start (fun s -> s.EndsWith("Z")) map)
+
+    stepsToFinish |> Seq.reduce lcm
 
   let parse filename =
     let lineRegex = Regex("(?<node>\w+) = \((?<left>\w+), (?<right>\w+)\)")
