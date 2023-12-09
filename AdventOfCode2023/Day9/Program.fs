@@ -8,10 +8,10 @@ type History = int64 array
 type OASISReport = History array
 
 module OASISReport =
-  let delta history : int64 array =
-    history |> Array.windowed 2 |> Array.map (fun window -> window[1] - window[0])
-
   let generateDeltas (history: History) : int64 array seq =
+    let delta history : int64 array =
+      history |> Array.windowed 2 |> Array.map (fun window -> window[1] - window[0])
+
     seq {
       let mutable d = history
       yield d
@@ -21,19 +21,13 @@ module OASISReport =
         yield d
     }
 
-  let nextPredictedValue (history: History) : int64 =
-    history |> generateDeltas |> Seq.map Array.last |> Seq.sum
+  let next deltas : int64 = deltas |> Seq.map Array.last |> Seq.sum
 
-  let pastPredictedValue (history: History) : int64 =
-    history
-    |> generateDeltas
-    |> Seq.rev
-    |> Seq.map Array.head
-    |> Seq.fold (fun acc n -> n - acc) 0
+  let previous deltas : int64 =
+    deltas |> Seq.map Array.head |> Seq.rev |> Seq.fold (fun acc n -> n - acc) 0
 
-  let nextPredictedValues (report: OASISReport) = report |> Array.map nextPredictedValue
-
-  let pastPredictedValues (report: OASISReport) = report |> Array.map pastPredictedValue
+  let predictedValues transform report =
+    report |> Array.map (fun history -> history |> generateDeltas |> transform)
 
   let parse filename =
     filename

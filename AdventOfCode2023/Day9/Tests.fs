@@ -7,7 +7,10 @@ open Xunit
 [<InlineData("Day9/input.txt", 1930746032)>]
 let ``The sum of the future extrapolated values`` (filename: string, expected: int64) =
   let result =
-    filename |> OASISReport.parse |> OASISReport.nextPredictedValues |> Array.sum
+    filename
+    |> OASISReport.parse
+    |> (OASISReport.predictedValues OASISReport.next)
+    |> Array.sum
 
   Assert.Equal(expected, result)
 
@@ -17,6 +20,9 @@ let ``The sum of the future extrapolated values`` (filename: string, expected: i
 [<InlineData("Day9/input.txt", 1154)>]
 let ``The sum of the past extrapolated values`` (filename: string, expected: int64) =
   let result =
-    filename |> OASISReport.parse |> OASISReport.pastPredictedValues |> Array.sum
+    filename
+    |> OASISReport.parse
+    |> (OASISReport.predictedValues OASISReport.previous)
+    |> Array.sum
 
   Assert.Equal(expected, result)
