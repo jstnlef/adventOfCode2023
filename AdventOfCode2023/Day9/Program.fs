@@ -11,7 +11,7 @@ module OASISReport =
   let delta history : int64 array =
     history |> Array.windowed 2 |> Array.map (fun window -> window[1] - window[0])
 
-  let nextPredictedValue (history: History) : int64 =
+  let generateDeltas (history: History) : int64 array seq =
     seq {
       let mutable d = history
       yield d
@@ -19,12 +19,21 @@ module OASISReport =
       while Array.sum d <> 0 do
         d <- delta d
         yield d
-
     }
-    |> Seq.map Array.last
-    |> Seq.sum
+
+  let nextPredictedValue (history: History) : int64 =
+    history |> generateDeltas |> Seq.map Array.last |> Seq.sum
+
+  let pastPredictedValue (history: History) : int64 =
+    history
+    |> generateDeltas
+    |> Seq.rev
+    |> Seq.map Array.head
+    |> Seq.fold (fun acc n -> n - acc) 0
 
   let nextPredictedValues (report: OASISReport) = report |> Array.map nextPredictedValue
+
+  let pastPredictedValues (report: OASISReport) = report |> Array.map pastPredictedValue
 
   let parse filename =
     filename
