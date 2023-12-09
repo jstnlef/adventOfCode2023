@@ -14,18 +14,29 @@ type Map = Transform array
 type Almanac = { seeds: Range array; maps: Map array }
 
 module Almanac =
-  let transform (ranges: Range array) (map: Map) =
+  let transformRange (map: Map) (startRange, endRange) =
     seq {
-      for rangeStart, rangeEnd in ranges do
-        for transformStart, transformEnd, delta in map do
-          // Completely outside the transform range before it
-          yield rangeStart, (min transformStart rangeEnd)
-          // Completely inside the transform
-          yield (max transformStart rangeStart) + delta, (min rangeEnd transformEnd) + delta
-    // Completely outside the transform after it
-    // yield , rangeEnd
+      for transformStart, transformEnd, delta in map do
+        // Completely outside the transform range before it
+        yield startRange, (min transformStart endRange)
+        // Completely inside the transform
+        yield (max transformStart startRange) + delta, (min endRange transformEnd) + delta
     }
     |> Seq.filter (fun (a, b) -> a < b)
+
+  let transform (ranges: Range array) (map: Map) =
+    ranges |> Seq.collect (transformRange map)
+  // seq {
+  //   for rangeStart, rangeEnd in ranges do
+  //     for transformStart, transformEnd, delta in map do
+  //       // Completely outside the transform range before it
+  //       yield rangeStart, (min transformStart rangeEnd)
+  //       // Completely inside the transform
+  //       yield (max transformStart rangeStart) + delta, (min rangeEnd transformEnd) + delta
+  // // Completely outside the transform after it
+  // // yield , rangeEnd
+  // }
+  // |> Seq.filter (fun (a, b) -> a < b)
 
   let findLowestLocation (almanac: Almanac) =
     almanac.maps[..0]
