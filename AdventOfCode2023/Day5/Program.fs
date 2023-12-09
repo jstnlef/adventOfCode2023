@@ -43,24 +43,20 @@ module Almanac =
     |> Seq.map fst
     |> Seq.min
 
-  let parseIndividualSeeds (line: string) =
-    let parseSeeds (s: string) =
-      s.Trim().Split(" ") |> Array.map Int64.Parse |> Array.map (fun n -> n, n + 1L)
+  let toIndividualSeeds (nums: int64 array) = nums |> Array.map (fun n -> n, n + 1L)
 
-    line.Split(":")[1] |> parseSeeds
-
-  let parseSeedRanges (line: string) =
-    let parseLineToRanges (s: string) =
-      s.Trim().Split(" ")
-      |> Array.map Int64.Parse
-      |> Array.chunkBySize 2
-      |> Array.map (fun chunk -> (chunk[0], chunk[0] + chunk[1]))
-
-    line.Split(":")[1] |> parseLineToRanges
+  let toSeedRanges (nums: int64 array) =
+    nums
+    |> Array.chunkBySize 2
+    |> Array.map (fun chunk -> (chunk[0], chunk[0] + chunk[1]))
 
   let parse seedParseFunc filename =
     let lines = filename |> File.ReadAllText |> _.Split("\n\n")
-    let seeds = seedParseFunc lines[0]
+
+    let parsedSeedNums =
+      (lines[0].Split(":")[1]).Trim().Split(" ") |> Array.map Int64.Parse
+
+    let seeds = seedParseFunc parsedSeedNums
 
     let parseMap (mapText: string) =
       let mapRegex = Regex("(?<name>[\w|\-?]+) map:\n((?<range>\d+ ?)\n?)+")
