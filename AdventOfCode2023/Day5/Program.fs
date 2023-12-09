@@ -54,7 +54,7 @@ module Almanac =
     (line.Split [| ':' |])[1] |> parseLineToRanges
 
   let parse filename =
-    let lines = filename |> File.ReadAllText |> (fun s -> s.Split("\n\n"))
+    let lines = filename |> File.ReadAllText |> _.Split("\n\n")
     let seeds = parseSeedRanges lines[0]
 
     let parseMap (mapText: string) =

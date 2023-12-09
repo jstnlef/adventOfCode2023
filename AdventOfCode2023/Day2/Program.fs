@@ -46,7 +46,7 @@ module Games =
   let findFewestCubesForColor color game =
     game.cubes
     |> Array.filter (fun c -> c.color = color)
-    |> Array.map (fun c -> c.num)
+    |> Array.map _.num
     |> Array.max
 
   let findFewestCubes game =

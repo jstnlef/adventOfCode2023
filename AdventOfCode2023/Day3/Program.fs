@@ -56,7 +56,7 @@ module Schematic =
   let allActualPartNumbers schematic =
     schematic.parts
     |> Seq.filter (hasAdjacent schematic isSymbol)
-    |> Seq.map (fun p -> p.number)
+    |> Seq.map _.number
 
   let allGearRatios schematic =
     let gears = Dictionary<int * int, int List>()
