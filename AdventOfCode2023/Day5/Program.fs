@@ -31,17 +31,7 @@ module Almanac =
     ranges |> Seq.collect (transformRange map)
 
   let findLowestLocation (almanac: Almanac) =
-    seq {
-      let mutable seeds = almanac.seeds |> Array.toSeq
-
-      for map in almanac.maps do
-        seeds <- (transform seeds map)
-
-      yield seeds
-    }
-    |> Seq.concat
-    |> Seq.map fst
-    |> Seq.min
+    almanac.maps |> Array.fold transform almanac.seeds |> Seq.map fst |> Seq.min
 
   let toIndividualSeeds (nums: int64 array) = nums |> Array.map (fun n -> n, n + 1L)
 
