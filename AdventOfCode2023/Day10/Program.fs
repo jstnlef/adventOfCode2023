@@ -29,7 +29,27 @@ type Pipes =
     start: int * int }
 
 module Pipes =
-  let distanceToFarthestPoint pipes = 0
+  let getLocType (x, y) pipes = pipes.pipes[y][x]
+
+  let neighborDeltas =
+    seq {
+      yield 0, 1
+      yield 0, -1
+      yield 1, 0
+      yield -1, 0
+    }
+
+  let startingPipes pipes =
+    let x, y = pipes.start
+
+    neighborDeltas
+    |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
+    |> Seq.filter (fun loc -> pipes |> getLocType loc <> Ground)
+    |> Set
+
+  let distanceToFarthestPoint pipes =
+    let initialLocs = startingPipes pipes
+    0
 
   let parse filename : Pipes =
     let mutable start = (0, 0)
