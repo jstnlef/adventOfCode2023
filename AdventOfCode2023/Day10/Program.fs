@@ -2,6 +2,12 @@ namespace Day10
 
 open System.IO
 
+type Direction =
+  | N
+  | S
+  | W
+  | E
+
 type Location =
   | Pipe_NS
   | Pipe_WE
@@ -33,22 +39,34 @@ module Pipes =
 
   let neighborDeltas =
     seq {
-      yield 0, 1
-      yield 0, -1
-      yield 1, 0
-      yield -1, 0
+      yield S, (0, 1)
+      yield N, (0, -1)
+      yield E, (1, 0)
+      yield W, (-1, 0)
     }
 
-  let startingPipes pipes =
-    let x, y = pipes.start
+  let neighbors (x, y) =
+    neighborDeltas |> Seq.map (fun (dir, (dx, dy)) -> (dir, (x + dx, y + dy)))
 
-    neighborDeltas
-    |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
-    |> Seq.filter (fun loc -> pipes |> getLocType loc <> Ground)
+  let inbounds (x, y) pipes =
+    y >= 0 && y < pipes.pipes.Length && x >= 0 && x < pipes.pipes[y].Length
+
+  let nextPipe dir loc pipes =
+    let locType = getLocType loc pipes
+
+    match dir with
+    | N -> Array.contains locType [| Pipe_NS; Pipe_SE; Pipe_SW |]
+    | S -> Array.contains locType [| Pipe_NS; Pipe_NE; Pipe_NW |]
+    | W -> Array.contains locType [| Pipe_WE; Pipe_NE; Pipe_SE |]
+    | E -> Array.contains locType [| Pipe_WE; Pipe_NW; Pipe_SW |]
+
+  let nextPipes location pipes =
+    neighbors location
+    |> Seq.filter (fun (dir, loc) -> inbounds loc pipes && nextPipe dir loc pipes)
     |> Set
 
   let distanceToFarthestPoint pipes =
-    let initialLocs = startingPipes pipes
+    let seen = nextPipes pipes.start pipes
     0
 
   let parse filename : Pipes =
