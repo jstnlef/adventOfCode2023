@@ -40,7 +40,7 @@ module WastelandMap =
     let mutable stepsToFinish =
       map.network.Keys
       |> Seq.filter _.EndsWith("A")
-      |> Seq.map (fun start -> findWayOut start (fun s -> s.EndsWith("Z")) map)
+      |> Seq.map (fun start -> findWayOut start (_.EndsWith("Z")) map)
 
     stepsToFinish |> Seq.reduce lcm
 

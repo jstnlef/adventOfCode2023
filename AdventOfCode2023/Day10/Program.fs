@@ -15,7 +15,7 @@ type Location =
 module Location =
   let convert c =
     match c with
-    | '|' -> Pipe_NE
+    | '|' -> Pipe_NS
     | '-' -> Pipe_WE
     | 'L' -> Pipe_NE
     | 'J' -> Pipe_NW
@@ -24,12 +24,28 @@ module Location =
     | 'S' -> Start
     | _ -> Ground
 
-type Pipes = Location array array
+type Pipes =
+  { pipes: Location array array
+    start: int * int }
 
 module Pipes =
   let distanceToFarthestPoint pipes = 0
 
   let parse filename : Pipes =
-    filename
-    |> File.ReadAllLines
-    |> Array.map (fun line -> line |> Seq.map Location.convert |> Seq.toArray)
+    let mutable start = (0, 0)
+    let mutable pipes = List.empty
+
+    for y, line in (filename |> File.ReadLines |> Seq.indexed) do
+      let row = Array.init line.Length (fun _ -> Ground)
+
+      for x, c in (line |> Seq.indexed) do
+        let loc = Location.convert c
+        row[x] <- loc
+
+        if loc = Start then
+          start <- (x, y)
+
+      pipes <- pipes @ [ row ]
+
+    { start = start
+      pipes = pipes |> List.toArray }
