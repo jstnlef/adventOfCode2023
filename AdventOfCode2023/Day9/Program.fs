@@ -3,34 +3,29 @@ namespace Day9
 open System
 open System.IO
 
-type History = int64 array
-
+type History = int array
 type OASISReport = History array
+type Delta = int array
 
 module OASISReport =
-  let generateDeltas (history: History) : int64 array seq =
-    let delta history : int64 array =
-      history |> Array.windowed 2 |> Array.map (fun window -> window[1] - window[0])
+  let generateDeltas: (History -> Delta seq) =
+    let delta nums =
+      if Array.sum nums = 0 then
+        None
+      else
+        Some(nums, nums |> Array.windowed 2 |> Array.map (fun window -> window[1] - window[0]))
 
-    seq {
-      let mutable d = history
-      yield d
+    Seq.unfold delta
 
-      while Array.sum d <> 0 do
-        d <- delta d
-        yield d
-    }
+  let next: (Delta seq -> int) = Seq.map Array.last >> Seq.sum
 
-  let next deltas : int64 = deltas |> Seq.map Array.last |> Seq.sum
+  let previous: (Delta seq -> int) =
+    Seq.map Array.head >> Seq.rev >> Seq.fold (fun acc n -> n - acc) 0
 
-  let previous deltas : int64 =
-    deltas |> Seq.map Array.head |> Seq.rev |> Seq.fold (fun acc n -> n - acc) 0
+  let predictedValues transform = Array.map (generateDeltas >> transform)
 
-  let predictedValues transform report =
-    report |> Array.map (fun history -> history |> generateDeltas |> transform)
-
-  let parse filename =
+  let parse filename : OASISReport =
     filename
     |> File.ReadLines
-    |> Seq.map (fun s -> s.Split(" ") |> Array.map Int64.Parse)
+    |> Seq.map (fun s -> s.Split(" ") |> Array.map Int32.Parse)
     |> Seq.toArray
