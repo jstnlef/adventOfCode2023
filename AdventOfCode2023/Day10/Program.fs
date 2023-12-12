@@ -1,5 +1,6 @@
 namespace Day10
 
+open System.Collections.Generic
 open System.IO
 
 type Direction =
@@ -63,11 +64,32 @@ module Pipes =
   let nextPipes location pipes =
     neighbors location
     |> Seq.filter (fun (dir, loc) -> inbounds loc pipes && nextPipe dir loc pipes)
-    |> Set
+    |> Seq.map snd
 
   let distanceToFarthestPoint pipes =
-    let seen = nextPipes pipes.start pipes
-    0
+    let mutable visited =
+      Array.init pipes.pipes.Length (fun _ -> Array.init pipes.pipes[0].Length (fun _ -> false))
+
+    let queue = Queue<int * int>()
+    let x, y = pipes.start
+    visited[y][x] <- true
+    queue.Enqueue(pipes.start)
+    let mutable distance = 0
+
+    while queue.Count > 0 do
+      let next = queue.Dequeue()
+
+      let children =
+        nextPipes next pipes |> Seq.filter (fun (x, y) -> not (visited[y][x]))
+
+      for child in children do
+        queue.Enqueue(child)
+        let x, y = child
+        visited[y][x] <- true
+
+      distance <- distance + 1
+
+    distance / 2
 
   let parse filename : Pipes =
     let mutable start = (0, 0)
