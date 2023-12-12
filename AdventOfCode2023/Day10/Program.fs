@@ -1,6 +1,5 @@
 namespace Day10
 
-open System.Collections.Generic
 open System.IO
 
 type Direction =
@@ -40,14 +39,14 @@ module Pipes =
 
   let neighborDeltas =
     seq {
-      yield S, (0, 1)
-      yield N, (0, -1)
-      yield E, (1, 0)
-      yield W, (-1, 0)
+      yield (0, 1)
+      yield (0, -1)
+      yield (1, 0)
+      yield (-1, 0)
     }
 
   let neighbors (x, y) =
-    neighborDeltas |> Seq.map (fun (dir, (dx, dy)) -> (dir, (x + dx, y + dy)))
+    neighborDeltas |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
 
   let inbounds (x, y) pipes =
     y >= 0 && y < pipes.pipes.Length && x >= 0 && x < pipes.pipes[y].Length
@@ -61,33 +60,27 @@ module Pipes =
     | W -> Array.contains locType [| Pipe_WE; Pipe_NE; Pipe_SE |]
     | E -> Array.contains locType [| Pipe_WE; Pipe_NW; Pipe_SW |]
 
-  let nextPipes location pipes =
-    neighbors location
-    |> Seq.filter (fun (dir, loc) -> inbounds loc pipes && nextPipe dir loc pipes)
-    |> Seq.map snd
+  let nearbyPipes location pipes =
+    neighbors location |> Seq.filter (fun loc -> inbounds loc pipes)
+
+  let followPipe loc = Some((0, 0))
 
   let distanceToFarthestPoint pipes =
     let mutable visited =
       Array.init pipes.pipes.Length (fun _ -> Array.init pipes.pipes[0].Length (fun _ -> false))
 
-    let queue = Queue<int * int>()
     let x, y = pipes.start
     visited[y][x] <- true
-    queue.Enqueue(pipes.start)
-    let mutable distance = 0
-
-    while queue.Count > 0 do
-      let next = queue.Dequeue()
-
-      let children =
-        nextPipes next pipes |> Seq.filter (fun (x, y) -> not (visited[y][x]))
-
-      for child in children do
-        queue.Enqueue(child)
-        let x, y = child
-        visited[y][x] <- true
-
-      distance <- distance + 1
+    let mutable nearby = nearbyPipes pipes.start pipes |> Seq.tryHead
+    let mutable distance = 1
+    //
+    // while Option.isSome nearby do
+    //   nearby <-
+    //     followPipe (Option.get nearby)
+    //     |> Option.filter (fun (x, y) -> not (visited[y][x]))
+    //
+    //   nearby |> Option.iter (fun (x, y) -> visited[y][x] <- true)
+    //   distance <- distance + 1
 
     distance / 2
 
