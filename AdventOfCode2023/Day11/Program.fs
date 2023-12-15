@@ -13,7 +13,7 @@ module Image =
 
   let allShortestDistances (image: Image) =
     image
-    |> Itertools.combinations 2
+    |> Itertools.combinationsOf2
     |> Seq.map (fun galaxies -> distance (galaxies[0]) (galaxies[1]))
 
   let parse expansionFactor filename : Image =
