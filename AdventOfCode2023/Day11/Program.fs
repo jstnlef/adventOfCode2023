@@ -3,19 +3,19 @@ namespace Day11
 open System.IO
 open AdventOfCode2023.Common
 
-type Galaxy = { id: int; pos: int * int }
+type Galaxy = { id: int; pos: int64 * int64 }
 
 type Image = List<Galaxy>
 
 module Image =
-  let distance (ax, ay) (bx, by) = abs (bx - ax) + abs (by - ay)
+  let distance (ax, ay) (bx, by) : int64 = abs (bx - ax) + abs (by - ay)
 
   let allShortestDistances (image: Image) =
     image
     |> Itertools.combinations 2
     |> Seq.map (fun galaxies -> distance (galaxies[0].pos) (galaxies[1].pos))
 
-  let parse filename : Image =
+  let parse expansionFactor filename : Image =
     let mutable id = 0
     let mutable galaxies = List.empty
     let lines = filename |> File.ReadAllLines
@@ -45,9 +45,14 @@ module Image =
           id <- id + 1
 
           let modifiedX =
-            x + (columnsToDouble |> Seq.takeWhile (fun i -> i < x) |> Seq.length)
+            x
+            + ((expansionFactor - 1)
+               * (columnsToDouble |> Seq.takeWhile (fun i -> i < x) |> Seq.length))
 
-          let modifiedY = y + (rowsToDouble |> Seq.takeWhile (fun i -> i < y) |> Seq.length)
+          let modifiedY =
+            y
+            + ((expansionFactor - 1)
+               * (rowsToDouble |> Seq.takeWhile (fun i -> i < y) |> Seq.length))
 
           let galaxy =
             { id = id
