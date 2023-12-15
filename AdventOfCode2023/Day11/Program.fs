@@ -19,23 +19,40 @@ module Image =
     let mutable id = 0
     let mutable galaxies = List.empty
     let lines = filename |> File.ReadAllLines
+    let space = array2D lines
 
-    let expandedSpace =
+    let verticalList arr =
+      seq { for j in 0 .. Array2D.length2 arr - 1 -> [ for i in 0 .. Array2D.length1 arr - 1 -> arr[i, j] ] }
+
+    let columnsToDouble =
+      space
+      |> verticalList
+      |> Seq.indexed
+      |> Seq.filter (fun (_, l) -> l |> List.forall (fun c -> c = '.'))
+      |> Seq.map fst
+
+    let rowsToDouble =
       lines
-      |> Array.toList
-      // Add horizontal space
-      |> List.collect (fun line ->
-        if line |> Seq.forall (fun c -> c = '.') then
-          [ line; line ]
-        else
-          [ line ])
+      |> Seq.indexed
+      |> Seq.filter (fun (_, s) -> s |> Seq.forall (fun c -> c = '.'))
+      |> Seq.map fst
 
-    for y, line in Seq.indexed expandedSpace do
+
+    for y, line in Seq.indexed lines do
       for x, c in Seq.indexed line do
         match c with
         | '#' ->
           id <- id + 1
-          let galaxy = { id = id; pos = (x, y) }
+
+          let modifiedX =
+            x + (columnsToDouble |> Seq.takeWhile (fun i -> i < x) |> Seq.length)
+
+          let modifiedY = y + (rowsToDouble |> Seq.takeWhile (fun i -> i < y) |> Seq.length)
+
+          let galaxy =
+            { id = id
+              pos = (modifiedX, modifiedY) }
+
           galaxies <- galaxies @ [ galaxy ]
         | _ -> ()
 
