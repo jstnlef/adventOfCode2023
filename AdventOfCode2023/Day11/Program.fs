@@ -22,23 +22,23 @@ module Image =
     let space = array2D lines
 
     let verticalList arr =
-      seq { for j in 0 .. Array2D.length2 arr - 1 -> [ for i in 0 .. Array2D.length1 arr - 1 -> arr[i, j] ] }
+      [| for j in 0 .. Array2D.length2 arr - 1 -> [ for i in 0 .. Array2D.length1 arr - 1 -> arr[i, j] ] |]
 
     let columnsToDouble =
       space
       |> verticalList
-      |> Seq.indexed
-      |> Seq.filter (fun (_, l) -> l |> List.forall (fun c -> c = '.'))
-      |> Seq.map fst
+      |> Array.indexed
+      |> Array.filter (fun (_, l) -> l |> List.forall (fun c -> c = '.'))
+      |> Array.map fst
 
     let rowsToDouble =
       lines
-      |> Seq.indexed
-      |> Seq.filter (fun (_, s) -> s |> Seq.forall (fun c -> c = '.'))
-      |> Seq.map fst
+      |> Array.indexed
+      |> Array.filter (fun (_, s) -> s |> Seq.forall (fun c -> c = '.'))
+      |> Array.map fst
 
 
-    for y, line in Seq.indexed lines do
+    for y, line in Array.indexed lines do
       for x, c in Seq.indexed line do
         match c with
         | '#' ->
@@ -47,12 +47,12 @@ module Image =
           let modifiedX =
             x
             + ((expansionFactor - 1)
-               * (columnsToDouble |> Seq.takeWhile (fun i -> i < x) |> Seq.length))
+               * (columnsToDouble |> Array.takeWhile (fun i -> i < x) |> Array.length))
 
           let modifiedY =
             y
             + ((expansionFactor - 1)
-               * (rowsToDouble |> Seq.takeWhile (fun i -> i < y) |> Seq.length))
+               * (rowsToDouble |> Array.takeWhile (fun i -> i < y) |> Array.length))
 
           let galaxy =
             { id = id
