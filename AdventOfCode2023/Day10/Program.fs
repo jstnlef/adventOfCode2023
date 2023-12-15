@@ -3,10 +3,26 @@ namespace Day10
 open System.IO
 
 type Direction =
-  | N
-  | S
-  | W
-  | E
+  | North
+  | South
+  | West
+  | East
+
+module Direction =
+  let delta dir =
+    match dir with
+    | North -> (0, -1)
+    | South -> (0, 1)
+    | West -> (-1, 0)
+    | East -> (1, 0)
+
+  let all =
+    seq {
+      yield North
+      yield South
+      yield West
+      yield East
+    }
 
 type Location =
   | Pipe_NS
@@ -37,52 +53,58 @@ type Pipes =
 module Pipes =
   let getLocType (x, y) pipes = pipes.pipes[y][x]
 
-  let neighborDeltas =
-    seq {
-      yield (0, 1)
-      yield (0, -1)
-      yield (1, 0)
-      yield (-1, 0)
-    }
-
-  let neighbors (x, y) =
-    neighborDeltas |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
+  let updatedLocation (x, y) dir =
+    let dx, dy = Direction.delta dir
+    dir, (x + dx, y + dy)
 
   let inbounds (x, y) pipes =
     y >= 0 && y < pipes.pipes.Length && x >= 0 && x < pipes.pipes[y].Length
 
-  let nextPipe dir loc pipes =
-    let locType = getLocType loc pipes
+  let isPipeValid pipes previousDir location =
+    let locType = getLocType location pipes
 
-    match dir with
-    | N -> Array.contains locType [| Pipe_NS; Pipe_SE; Pipe_SW |]
-    | S -> Array.contains locType [| Pipe_NS; Pipe_NE; Pipe_NW |]
-    | W -> Array.contains locType [| Pipe_WE; Pipe_NE; Pipe_SE |]
-    | E -> Array.contains locType [| Pipe_WE; Pipe_NW; Pipe_SW |]
+    match previousDir with
+    | North -> Array.contains locType [| Pipe_NS; Pipe_SE; Pipe_SW |]
+    | South -> Array.contains locType [| Pipe_NS; Pipe_NE; Pipe_NW |]
+    | West -> Array.contains locType [| Pipe_WE; Pipe_NE; Pipe_SE |]
+    | East -> Array.contains locType [| Pipe_WE; Pipe_NW; Pipe_SW |]
 
-  let nearbyPipes location pipes =
-    neighbors location |> Seq.filter (fun loc -> inbounds loc pipes)
+  let nearbyConnectedPipes pipes location =
+    Direction.all
+    |> Seq.map (updatedLocation location)
+    |> Seq.filter (fun (previousDir, updated) -> inbounds updated pipes && isPipeValid pipes previousDir updated)
+    |> Seq.toArray
 
-  let followPipe loc = Some((0, 0))
+  let followPipe pipes (previousDir, location) =
+    let locType = getLocType location pipes
+
+    let travelDir =
+      match previousDir, locType with
+      | North, Pipe_NS -> North
+      | North, Pipe_SE -> East
+      | North, Pipe_SW -> West
+      | South, Pipe_NS -> South
+      | South, Pipe_NE -> East
+      | South, Pipe_NW -> West
+      | West, Pipe_WE -> West
+      | West, Pipe_NE -> North
+      | West, Pipe_SE -> South
+      | East, Pipe_WE -> East
+      | East, Pipe_NW -> North
+      | East, Pipe_SW -> South
+      | _ -> failwith "Not covered"
+
+    updatedLocation location travelDir
 
   let distanceToFarthestPoint pipes =
-    let mutable visited =
-      Array.init pipes.pipes.Length (fun _ -> Array.init pipes.pipes[0].Length (fun _ -> false))
-
-    let x, y = pipes.start
-    visited[y][x] <- true
-    let mutable nearby = nearbyPipes pipes.start pipes |> Seq.tryHead
     let mutable distance = 1
-    //
-    // while Option.isSome nearby do
-    //   nearby <-
-    //     followPipe (Option.get nearby)
-    //     |> Option.filter (fun (x, y) -> not (visited[y][x]))
-    //
-    //   nearby |> Option.iter (fun (x, y) -> visited[y][x] <- true)
-    //   distance <- distance + 1
+    let mutable current = nearbyConnectedPipes pipes pipes.start
 
-    distance / 2
+    while snd current[0] <> snd current[1] do
+      current <- current |> Array.map (followPipe pipes)
+      distance <- distance + 1
+
+    distance
 
   let parse filename : Pipes =
     let mutable start = (0, 0)
