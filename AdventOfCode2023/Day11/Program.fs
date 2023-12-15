@@ -3,32 +3,29 @@ namespace Day11
 open System.IO
 open AdventOfCode2023.Common
 
-type Galaxy = { id: int; pos: int64 * int64 }
+type Galaxy = int * int
 
 type Image = List<Galaxy>
 
 module Image =
-  let distance (ax, ay) (bx, by) : int64 = abs (bx - ax) + abs (by - ay)
+  let distance (ax, ay) (bx, by) : int64 =
+    abs ((int64 bx) - (int64 ax)) + abs ((int64 by) - (int64 ay))
 
   let allShortestDistances (image: Image) =
     image
     |> Itertools.combinations 2
-    |> Seq.map (fun galaxies -> distance (galaxies[0].pos) (galaxies[1].pos))
+    |> Seq.map (fun galaxies -> distance (galaxies[0]) (galaxies[1]))
 
   let parse expansionFactor filename : Image =
-    let mutable id = 0
-    let mutable galaxies = List.empty
     let lines = filename |> File.ReadAllLines
-    let space = array2D lines
 
-    let verticalList arr =
-      [| for j in 0 .. Array2D.length2 arr - 1 -> [ for i in 0 .. Array2D.length1 arr - 1 -> arr[i, j] ] |]
+    let verticalList =
+      [| for j in 0 .. lines[0].Length - 1 -> [| for i in 0 .. lines.Length - 1 -> lines[i][j] |] |]
 
     let columnsToDouble =
-      space
-      |> verticalList
+      verticalList
       |> Array.indexed
-      |> Array.filter (fun (_, l) -> l |> List.forall (fun c -> c = '.'))
+      |> Array.filter (fun (_, l) -> l |> Array.forall (fun c -> c = '.'))
       |> Array.map fst
 
     let rowsToDouble =
@@ -37,6 +34,8 @@ module Image =
       |> Array.filter (fun (_, s) -> s |> Seq.forall (fun c -> c = '.'))
       |> Array.map fst
 
+    let mutable id = 0
+    let mutable galaxies = List.empty
 
     for y, line in Array.indexed lines do
       for x, c in Seq.indexed line do
@@ -47,18 +46,14 @@ module Image =
           let modifiedX =
             x
             + ((expansionFactor - 1)
-               * (columnsToDouble |> Array.takeWhile (fun i -> i < x) |> Array.length))
+               * (columnsToDouble |> (Seq.takeWhile (fun i -> i < x) >> Seq.length)))
 
           let modifiedY =
             y
             + ((expansionFactor - 1)
-               * (rowsToDouble |> Array.takeWhile (fun i -> i < y) |> Array.length))
+               * (rowsToDouble |> (Seq.takeWhile (fun i -> i < y) >> Seq.length)))
 
-          let galaxy =
-            { id = id
-              pos = (modifiedX, modifiedY) }
-
-          galaxies <- galaxies @ [ galaxy ]
+          galaxies <- galaxies @ [ (modifiedX, modifiedY) ]
         | _ -> ()
 
     galaxies
