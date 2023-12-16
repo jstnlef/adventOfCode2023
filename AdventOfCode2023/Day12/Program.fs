@@ -3,13 +3,14 @@ namespace Day12
 open System
 open System.IO
 open System.Text.RegularExpressions
+open AdventOfCode2023.Common
 
 type Springs = { springs: string; groups: int list }
 
 type ConditionRecord = Springs array
 
-module ConditionRecord =
-  let rec numberOfArrangements (springs: string) groups =
+module rec ConditionRecord =
+  let rec countArrangements (springs: string, groups) : int64 =
     match groups with
     | [] -> if (Seq.contains '#' springs) then 0 else 1
     | groupHead :: restOfGroup ->
@@ -24,26 +25,36 @@ module ConditionRecord =
           let nextNotDamaged = springs[next..next] <> "#"
 
           if lessThanLength && noOperatingSprings && nextNotDamaged then
-            result + numberOfArrangements springs[next + 1 ..] restOfGroup
+            result + numberOfArrangements (springs[next + 1 ..], restOfGroup)
           else
             result)
         0
 
+  let numberOfArrangements = Functools.memoize countArrangements
+
   let numberOfArrangementsPerRow record =
     record
-    |> Seq.map (fun { springs = springs; groups = groups } -> numberOfArrangements springs groups)
+    |> Seq.map (fun { springs = springs; groups = groups } -> numberOfArrangements (springs, groups))
 
-  let parse filename : ConditionRecord =
+  let parse expand filename : ConditionRecord =
     let regex = Regex("^(?<springs>[\?\.\#]+) ((?<groups>\d+),?)+$")
 
     let parseLine line =
       let m = regex.Match line
-      let springs = m.Groups["springs"].Value
 
-      let groups =
+      let springs =
+        if expand then
+          String.Join("?", Seq.replicate 5 m.Groups["springs"].Value)
+        else
+          m.Groups["springs"].Value
+
+      let mutable groups =
         m.Groups["groups"].Captures
         |> Seq.map (fun c -> Int32.Parse c.Value)
         |> Seq.toList
+
+      if expand then
+        groups <- groups |> Seq.replicate 5 |> List.concat
 
       { springs = springs; groups = groups }
 
