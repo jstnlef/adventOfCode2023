@@ -4,7 +4,7 @@ open Xunit
 
 [<Theory>]
 [<InlineData("Day12/testInput.txt", 21)>]
-[<InlineData("Day12/input.txt", -1)>]
+[<InlineData("Day12/input.txt", 7922)>]
 let ``The sum of the different arrangements of springs`` (filename: string, expected: int) =
   let result =
     filename
