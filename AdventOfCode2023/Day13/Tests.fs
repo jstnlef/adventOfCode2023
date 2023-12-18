@@ -6,13 +6,17 @@ open Xunit
 [<InlineData("Day13/testInput.txt", 405)>]
 [<InlineData("Day13/input.txt", 34889)>]
 let ``The sum of the lines of reflection for all the rock patterns`` (filename: string, expected: int) =
-  let result = filename |> RockFormations.parse |> RockFormations.countReflections
+  let result = filename |> RockFormations.parse |> RockFormations.countReflections 0
   Assert.Equal(expected, result)
 
 
 [<Theory>]
-[<InlineData("Day13/testInput.txt", -1)>]
+[<InlineData("Day13/testInput.txt", 400)>]
 [<InlineData("Day13/input.txt", -1)>]
-let ``test 2`` (filename: string, expected: int) =
-  let result = 0
+let ``The sum of the lines of reflection for all the rock patterns correcting for smudge``
+  (
+    filename: string,
+    expected: int
+  ) =
+  let result = filename |> RockFormations.parse |> RockFormations.countReflections 1
   Assert.Equal(expected, result)

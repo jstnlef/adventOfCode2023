@@ -3,43 +3,39 @@ namespace Day13
 open System.IO
 open Microsoft.FSharp.Core
 
-type RockFormation = char array2d
+type RockFormation = char array array
 
 module RockFormations =
-  let numberAboveReflection (rocks: char array array) =
-    let isReflection length i : bool =
+  let numberAboveReflection allowableDiffs (rocks: RockFormation) =
+    let isReflection i : bool =
       let allPairs =
-        seq { 0 .. length - 1 }
+        seq { 0 .. rocks.Length - 1 }
         |> Seq.map (fun j -> Array.tryItem (i - j) rocks, Array.tryItem (i + j + 1) rocks)
         |> Seq.takeWhile (fun (a, b) -> a.IsSome && b.IsSome)
 
       not (Seq.isEmpty allPairs) && Seq.forall (fun (a, b) -> a = b) allPairs
 
     seq { 0 .. rocks.Length }
-    |> Seq.tryFind (isReflection rocks.Length)
+    |> Seq.tryFind isReflection
     |> Option.map (fun n -> n + 1)
     |> Option.defaultValue 0
 
-  let findReflectionInFormation (formation: RockFormation) =
-    let columnsToLeft =
-      seq { 0 .. Array2D.length2 formation - 1 }
-      |> Seq.map (fun i -> formation[*, i])
-      |> Seq.toArray
-      |> numberAboveReflection
+  let findReflectionInFormation diffAmount (formation: RockFormation) =
+    let rowsAbove = formation |> (numberAboveReflection diffAmount)
 
-    let rowsAbove =
-      seq { 0 .. Array2D.length1 formation - 1 }
-      |> Seq.map (fun i -> formation[i, *])
-      |> Seq.toArray
-      |> numberAboveReflection
+    let columnsToLeft =
+      if rowsAbove = 0 then
+        formation |> Array.transpose |> (numberAboveReflection diffAmount)
+      else
+        0
 
     (rowsAbove * 100) + columnsToLeft
 
-  let countReflections: (RockFormation array -> int) =
-    Seq.map findReflectionInFormation >> Seq.sum
+  let countReflections diffAmount : (RockFormation array -> int) =
+    Seq.map (findReflectionInFormation diffAmount) >> Seq.sum
 
   let parse filename : RockFormation array =
     filename
     |> File.ReadAllText
     |> _.Split("\n\n")
-    |> Array.map (fun s -> s.Trim().Split("\n") |> Array.map _.ToCharArray() |> array2D)
+    |> Array.map (fun s -> s.Trim().Split("\n") |> Array.map _.ToCharArray())
