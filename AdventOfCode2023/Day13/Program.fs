@@ -6,29 +6,28 @@ open Microsoft.FSharp.Core
 type RockFormation = char array array
 
 module RockFormations =
-  let numberAboveReflection allowableDiffs (rocks: RockFormation) =
-    let numberOfDiffs i =
+  let numberAboveReflection allowableDiffs (formation: RockFormation) =
+    let numberOfDiffsInReflectionIsAllowed i =
       let countRowDiffs a b =
-        Seq.zip a b
-        |> Seq.map (fun (c1, c2) -> System.Convert.ToInt32(c1 <> c2))
-        |> Seq.sum
+        Array.zip a b
+        |> Array.map (fun (c1, c2) -> System.Convert.ToInt32(c1 <> c2))
+        |> Array.sum
 
-      seq { 0 .. rocks.Length - 1 }
-      |> Seq.map (fun j -> Array.tryItem (i - j - 1) rocks, Array.tryItem (i + j) rocks)
-      |> Seq.takeWhile (fun (a, b) -> a.IsSome && b.IsSome)
-      |> Seq.map (fun (a, b) -> countRowDiffs a.Value b.Value)
-      |> Seq.sum
+      (seq { 0 .. formation.Length - 1 }
+       |> Seq.map (fun j -> Array.tryItem (i - j - 1) formation, Array.tryItem (i + j) formation)
+       |> Seq.takeWhile (fun (a, b) -> a.IsSome && b.IsSome)
+       |> Seq.sumBy (fun (a, b) -> countRowDiffs a.Value b.Value)) = allowableDiffs
 
-    seq { 1 .. rocks.Length - 1 }
-    |> Seq.tryFind (fun i -> numberOfDiffs i = allowableDiffs)
+    seq { 1 .. formation.Length - 1 }
+    |> Seq.tryFind numberOfDiffsInReflectionIsAllowed
     |> Option.defaultValue 0
 
-  let findReflectionInFormation diffAmount (formation: RockFormation) =
+  let findReflectionInFormation diffAmount formation =
     let rowsAbove = formation |> (numberAboveReflection diffAmount)
 
     let columnsToLeft =
       if rowsAbove = 0 then
-        formation |> Array.transpose |> (numberAboveReflection diffAmount)
+        formation |> Array.transpose |> numberAboveReflection diffAmount
       else
         0
 
