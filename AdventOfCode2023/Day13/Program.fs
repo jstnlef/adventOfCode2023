@@ -7,17 +7,20 @@ type RockFormation = char array array
 
 module RockFormations =
   let numberAboveReflection allowableDiffs (rocks: RockFormation) =
-    let isReflection i : bool =
-      let allPairs =
-        seq { 0 .. rocks.Length - 1 }
-        |> Seq.map (fun j -> Array.tryItem (i - j) rocks, Array.tryItem (i + j + 1) rocks)
-        |> Seq.takeWhile (fun (a, b) -> a.IsSome && b.IsSome)
+    let numberOfDiffs i =
+      let countRowDiffs a b =
+        Seq.zip a b
+        |> Seq.map (fun (c1, c2) -> System.Convert.ToInt32(c1 <> c2))
+        |> Seq.sum
 
-      not (Seq.isEmpty allPairs) && Seq.forall (fun (a, b) -> a = b) allPairs
+      seq { 0 .. rocks.Length - 1 }
+      |> Seq.map (fun j -> Array.tryItem (i - j - 1) rocks, Array.tryItem (i + j) rocks)
+      |> Seq.takeWhile (fun (a, b) -> a.IsSome && b.IsSome)
+      |> Seq.map (fun (a, b) -> countRowDiffs a.Value b.Value)
+      |> Seq.sum
 
-    seq { 0 .. rocks.Length }
-    |> Seq.tryFind isReflection
-    |> Option.map (fun n -> n + 1)
+    seq { 1 .. rocks.Length - 1 }
+    |> Seq.tryFind (fun i -> numberOfDiffs i = allowableDiffs)
     |> Option.defaultValue 0
 
   let findReflectionInFormation diffAmount (formation: RockFormation) =
