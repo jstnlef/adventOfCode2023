@@ -6,20 +6,21 @@ open Microsoft.FSharp.Core
 type RockFormation = char array array
 
 module RockFormations =
-  let numberAboveReflection allowableDiffs (formation: RockFormation) =
-    let numberOfDiffsInReflectionIsAllowed i =
+  let numberAboveReflection requiredNumberOfDiffs (formation: RockFormation) =
+    let numberOfDiffsIsSameAsRequired i =
       let countRowDiffs a b =
-        Array.zip a b
-        |> Array.map (fun (c1, c2) -> System.Convert.ToInt32(c1 <> c2))
-        |> Array.sum
+        Array.zip a b |> Array.sumBy (fun (c1, c2) -> System.Convert.ToInt32(c1 <> c2))
 
-      (seq { 0 .. formation.Length - 1 }
-       |> Seq.map (fun j -> Array.tryItem (i - j - 1) formation, Array.tryItem (i + j) formation)
-       |> Seq.takeWhile (fun (a, b) -> a.IsSome && b.IsSome)
-       |> Seq.sumBy (fun (a, b) -> countRowDiffs a.Value b.Value)) = allowableDiffs
+      let boundary = min (i - 1) (formation.Length - i - 1)
+
+      let numberOfDiffs =
+        seq { 0..boundary }
+        |> Seq.sumBy (fun j -> countRowDiffs formation[i - j - 1] formation[i + j])
+
+      numberOfDiffs = requiredNumberOfDiffs
 
     seq { 1 .. formation.Length - 1 }
-    |> Seq.tryFind numberOfDiffsInReflectionIsAllowed
+    |> Seq.tryFind numberOfDiffsIsSameAsRequired
     |> Option.defaultValue 0
 
   let findReflectionInFormation diffAmount formation =
