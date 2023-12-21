@@ -14,11 +14,15 @@ module Platform =
     let n = Array.init platform.Length (fun i -> Array.copy platform[i])
 
     for c in 0 .. n[0].Length - 1 do
-      for _ in 1 .. n.Length - 1 do
-        for r in 1 .. n.Length - 1 do
-          if n[r][c] = mirror && n[r - 1][c] = ground then
-            n[r][c] <- ground
-            n[r - 1][c] <- mirror
+      let mutable endIndex = 0
+
+      for r in 0 .. n.Length - 1 do
+        if n[r][c] = mirror then
+          n[r][c] <- ground
+          n[endIndex][c] <- mirror
+          endIndex <- endIndex + 1
+        else if n[r][c] = rock then
+          endIndex <- r + 1
 
     n
 
