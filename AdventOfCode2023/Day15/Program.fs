@@ -31,19 +31,20 @@ module Initialization =
     let label = m.Groups["label"].Value
     let boxIndex = hash label
 
-    match m.Groups["op"].Value with
-    | "-" -> lenses[boxIndex] <- lenses[boxIndex] |> List.filter (fun (l, _) -> label <> l)
-    | "=" ->
-      let focalLength = Int32.Parse(m.Groups["val"].Value)
+    let performOpOnBox =
+      match m.Groups["op"].Value with
+      | "-" -> lenses[boxIndex] |> List.filter (fun (l, _) -> label <> l)
+      | "=" ->
+        let focalLength = Int32.Parse(m.Groups["val"].Value)
 
-      match List.tryFind (fun (l, _) -> label = l) lenses[boxIndex] with
-      | Some _ ->
-        lenses[boxIndex] <-
+        match List.tryFind (fun (l, _) -> label = l) lenses[boxIndex] with
+        | Some _ ->
           lenses[boxIndex]
           |> List.map (fun (l, f) -> if l = label then l, focalLength else l, f)
-      | None -> lenses[boxIndex] <- lenses[boxIndex] @ [ (label, focalLength) ]
-    | _ -> failwith "Invalid op"
+        | None -> lenses[boxIndex] @ [ (label, focalLength) ]
+      | _ -> failwith "Invalid op"
 
+    lenses[boxIndex] <- performOpOnBox
     lenses
 
   let run steps =
