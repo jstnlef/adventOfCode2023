@@ -11,8 +11,10 @@ let ``The sum of the hashes of each of the initialization steps`` (filename: str
 
 
 [<Theory>]
-[<InlineData("Day15/testInput.txt", -1)>]
-[<InlineData("Day15/input.txt", -1)>]
-let ``test 2`` (filename: string, expected: int) =
-  let result = 0
+[<InlineData("Day15/testInput.txt", 145)>]
+[<InlineData("Day15/input.txt", 271384)>]
+let ``The focusing power of the resulting lens configuration`` (filename: string, expected: int) =
+  let result =
+    filename |> Initialization.parse |> Initialization.run |> Lenses.focusingPower
+
   Assert.Equal(expected, result)
