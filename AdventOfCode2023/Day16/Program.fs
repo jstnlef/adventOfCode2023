@@ -54,14 +54,15 @@ module Contraption =
     let width = contraption[0].Length
 
     seq {
-      for i in 0..height do
-        yield countEnergizedTiles (i, -1, 0, 1) contraption
-        yield countEnergizedTiles (i, height, 0, -1) contraption
+      for i in 0 .. height - 1 do
+        yield i, -1, 0, 1
+        yield i, height, 0, -1
 
-      for i in 0..width do
-        yield countEnergizedTiles (-1, i, 1, 0) contraption
-        yield countEnergizedTiles (width, i, 0, -1) contraption
+      for i in 0 .. width - 1 do
+        yield -1, i, 1, 0
+        yield width, i, 0, -1
     }
+    |> Seq.map (fun start -> countEnergizedTiles start contraption)
     |> Seq.max
 
   let parse filename : Contraption =
