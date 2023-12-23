@@ -7,11 +7,11 @@ open System.Linq
 type Contraption = char array array
 
 module Contraption =
-  let inbounds (x, y, _, _) length =
-    x >= 0 && x < length && y >= 0 && y < length
+  let inbounds (x, y, _, _) (contraption: Contraption) =
+    x >= 0 && x < contraption[0].Length && y >= 0 && y < contraption.Length
 
   let countEnergizedTiles start (contraption: Contraption) =
-    let nextEnergizedTile current =
+    let nextEnergizedTiles current =
       let x, y, dx, dy = current
 
       match contraption[y][x] with
@@ -43,11 +43,26 @@ module Contraption =
       let x, y, dx, dy = q.Dequeue()
       let next = x + dx, y + dy, dx, dy
 
-      if inbounds next contraption.Length && seen.Add(next) then
-        for tile in nextEnergizedTile next do
+      if inbounds next contraption && seen.Add(next) then
+        for tile in nextEnergizedTiles next do
           q.Enqueue(tile)
 
     seen.Select(fun (x, y, _, _) -> x, y).ToHashSet().Count
+
+  let findMaxEnergizedTiles (contraption: Contraption) =
+    let height = contraption.Length
+    let width = contraption[0].Length
+
+    seq {
+      for i in 0..height do
+        yield countEnergizedTiles (i, -1, 0, 1) contraption
+        yield countEnergizedTiles (i, height, 0, -1) contraption
+
+      for i in 0..width do
+        yield countEnergizedTiles (-1, i, 1, 0) contraption
+        yield countEnergizedTiles (width, i, 0, -1) contraption
+    }
+    |> Seq.max
 
   let parse filename : Contraption =
     filename |> File.ReadAllLines |> Array.map _.ToCharArray()

@@ -13,8 +13,8 @@ let ``Count the number of energized tiles`` (filename: string, expected: int) =
 
 
 [<Theory>]
-[<InlineData("Day16/testInput.txt", -1)>]
-[<InlineData("Day16/input.txt", -1)>]
-let ``test 2`` (filename: string, expected: int) =
-  let result = 0
+[<InlineData("Day16/testInput.txt", 51)>]
+[<InlineData("Day16/input.txt", 7896)>]
+let ``The largest number of energized tiles`` (filename: string, expected: int) =
+  let result = filename |> Contraption.parse |> Contraption.findMaxEnergizedTiles
   Assert.Equal(expected, result)
