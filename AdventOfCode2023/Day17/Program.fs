@@ -6,11 +6,21 @@ open System.IO
 type HeatLossMap = int array array
 
 module HeatLossMap =
-  let inbounds (r, c) height width =
+  let inbounds r c height width =
     r >= 0 && r < height && c >= 0 && c < width
 
+  let neighborDirs dr dc =
+    seq {
+      yield 1, 0
+      yield 0, 1
+      yield -1, 0
+      yield 0, -1
+    }
+    |> Seq.filter (fun d -> (dr, dc) <> d && (-dr, -dc) <> d)
+
   let findMinHeatLoss least most (map: HeatLossMap) =
-    let goal = (map.Length - 1, map[0].Length - 1)
+    let height = map.Length
+    let width = map[0].Length
 
     let queue = PriorityQueue()
     let seen = HashSet()
@@ -22,28 +32,19 @@ module HeatLossMap =
     while queue.Count > 0 && not break' do
       let heatLoss, r, c, dr, dc = queue.Dequeue()
 
-      if (r, c) = goal then
+      if (r, c) = (height - 1, width - 1) then
         returnHeatLoss <- heatLoss
         break' <- true
 
       if not break' && seen.Add((r, c, dr, dc)) then
-        let neighborsD =
-          seq {
-            yield 1, 0
-            yield 0, 1
-            yield -1, 0
-            yield 0, -1
-          }
-          |> Seq.filter (fun (a, b) -> not (dr = a && dc = b) && not (-dr = a && -dc = b))
-
-        for ndr, ndc in neighborsD do
+        for ndr, ndc in neighborDirs dr dc do
           let mutable a, b, h = r, c, heatLoss
 
           for i in 1..most do
             a <- a + ndr
             b <- b + ndc
 
-            if inbounds (a, b) map.Length map[0].Length then
+            if inbounds a b height width then
               h <- h + map[a][b]
 
               if i >= least then
