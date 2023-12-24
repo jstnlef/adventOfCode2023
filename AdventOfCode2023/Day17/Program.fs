@@ -1,93 +1,55 @@
 namespace Day17
 
-open System
 open System.Collections.Generic
 open System.IO
 
-type Node = int * int
 type HeatLossMap = int array array
 
 module HeatLossMap =
-  let reconstructPath (cameFrom: Dictionary<Node, Node>) start goal =
-    seq {
-      let mutable current = goal
+  let inbounds (r, c) height width =
+    r >= 0 && r < height && c >= 0 && c < width
 
-      while current <> start do
-        yield current
-        current <- cameFrom[current]
+  let findMinHeatLoss least most (map: HeatLossMap) =
+    let goal = (map.Length - 1, map[0].Length - 1)
 
-      yield current
-    }
-
-  let neighbors node (cameFrom: Dictionary<Node, Node>) (map: HeatLossMap) =
-    let haveNotTravelled3Blocks node =
-      if not (cameFrom.ContainsKey(node)) then
-        true
-      else
-        let deltas =
-          reconstructPath cameFrom (0, 0) node
-          |> Seq.truncate 4
-          |> Seq.pairwise
-          |> Seq.map (fun ((r, c), (pr, pc)) -> r - pr, c - pc)
-
-        let x =
-          Seq.length deltas < 3
-          || deltas |> Seq.pairwise |> Seq.exists (fun (a, b) -> a <> b)
-
-        x
-
-    let r, c = node
-
-    seq {
-      yield r - 1, c
-      yield r + 1, c
-      yield r, c - 1
-      yield r, c + 1
-    }
-    |> Seq.filter (fun (r, c) ->
-      r >= 0
-      && r < map.Length
-      && c >= 0
-      && c < map[0].Length
-      && haveNotTravelled3Blocks (r, c))
-
-  let cost (r, c) (map: HeatLossMap) = map[r][c]
-
-  let findPath start goal heuristic (map: HeatLossMap) : Node seq =
-    let q = PriorityQueue()
-    let cameFrom = Dictionary()
-    let costSoFar = Dictionary()
-    q.Enqueue(start, 0)
-    cameFrom[start] <- start
-    costSoFar[start] <- 0
+    let queue = PriorityQueue()
+    let seen = HashSet()
+    queue.Enqueue((0, 0, 0, 0, 0), 0)
 
     let mutable break' = false
+    let mutable returnHeatLoss = 0
 
-    while q.Count > 0 && break' <> true do
-      let current = q.Dequeue()
+    while queue.Count > 0 && not break' do
+      let heatLoss, r, c, dr, dc = queue.Dequeue()
 
-      if current = goal then
+      if (r, c) = goal then
+        returnHeatLoss <- heatLoss
         break' <- true
 
-      if break' <> true then
-        map
-        |> neighbors current cameFrom
-        |> Seq.iter (fun neighbor ->
-          let newCost = costSoFar[current] + cost neighbor map
+      if not break' && seen.Add((r, c, dr, dc)) then
+        let neighborsD =
+          seq {
+            yield 1, 0
+            yield 0, 1
+            yield -1, 0
+            yield 0, -1
+          }
+          |> Seq.filter (fun (a, b) -> not (dr = a && dc = b) && not (-dr = a && -dc = b))
 
-          if (not (costSoFar.ContainsKey(neighbor))) || newCost < costSoFar[neighbor] then
-            costSoFar[neighbor] <- newCost
-            let priority = newCost + heuristic neighbor goal
-            q.Enqueue(neighbor, priority)
-            cameFrom[neighbor] <- current)
+        for ndr, ndc in neighborsD do
+          let mutable a, b, h = r, c, heatLoss
 
-    reconstructPath cameFrom start goal
+          for i in 1..most do
+            a <- a + ndr
+            b <- b + ndc
 
-  let minimizeHeatLoss (ar: int, ac: int) (br, bc) = Math.Abs(ar - br) + Math.Abs(ac - bc)
+            if inbounds (a, b) map.Length map[0].Length then
+              h <- h + map[a][b]
 
-  let findMinHeatLoss (map: HeatLossMap) =
-    findPath (0, 0) (map.Length - 1, map[0].Length - 1) minimizeHeatLoss map
-    |> Seq.sumBy (fun (r, c) -> map[r][c])
+              if i >= least then
+                queue.Enqueue((h, a, b, ndr, ndc), h)
+
+    returnHeatLoss
 
   let parse filename =
     filename
