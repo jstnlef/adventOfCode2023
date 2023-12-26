@@ -6,69 +6,71 @@ open System.Text.RegularExpressions
 open AdventOfCode2023.Common
 open Functools
 
+// For calculating the area of a shape via its vertices
+// https://en.wikipedia.org/wiki/Pick%27s_theorem
+// https://en.wikipedia.org/wiki/Shoelace_formula
+
 type Direction =
   | Up
   | Down
   | Left
   | Right
 
-type Color = int
-
 module Direction =
   let parse s =
     match s with
-    | "U" -> Up
-    | "D" -> Down
-    | "L" -> Left
-    | "R" -> Right
-    | _ -> failwith "Unknown"
+    | "U"
+    | "3" -> Up
+    | "D"
+    | "1" -> Down
+    | "L"
+    | "2" -> Left
+    | "R"
+    | "0" -> Right
+    | _ -> failwith "Invalid string for direction"
 
 type Instruction =
   { direction: Direction
-    distance: int
-    color: Color }
-
-type DigPlan = Instruction array
-
-type Vertex = int * int
+    distance: int64 }
 
 module DigPlan =
   let deltaV instruction =
     match instruction.direction with
-    | Up -> 0, -1 * instruction.distance
-    | Down -> 0, 1 * instruction.distance
-    | Left -> -1 * instruction.distance, 0
-    | Right -> 1 * instruction.distance, 0
+    | Up -> 0L, -1L * instruction.distance
+    | Down -> 0L, 1L * instruction.distance
+    | Left -> -1L * instruction.distance, 0
+    | Right -> 1L * instruction.distance, 0
 
   let runInstruction (x, y) instruction =
     let deltaX, deltaY = deltaV instruction
     x + deltaX, y + deltaY
 
-  let toVertices plan = Array.scan runInstruction (0, 0) plan
+  let toVertices = Array.scan runInstruction (0L, 0L)
 
-  let findArea vertices =
-    vertices
-    |> Array.pairwise
-    |> Array.sumBy (uncurry Vector2d.determinant)
-    |> fun x -> (abs x) / 2
+  let findArea =
+    Array.pairwise
+    >> Array.sumBy (uncurry Vector2d.determinant)
+    >> fun d -> (abs d) / 2L
 
-  let findPerimeter vertices =
-    vertices |> Array.pairwise |> Array.sumBy (uncurry Vector2d.length)
+  let findPerimeter = Array.pairwise >> Array.sumBy (uncurry Vector2d.length)
 
-  let dugOutArea plan : int =
+  let dugOutArea plan : int64 =
     let vertices = toVertices plan
     let area = findArea vertices
     let perimeter = findPerimeter vertices
-    area + (perimeter / 2) + 1
+    area + (perimeter / 2L) + 1L
 
-  let regex = Regex("^(?<dir>.) (?<dist>\d+) \(#(?<color>\w{6})\)$")
+  let parseLine (regex: Regex) (fromBase: int) line =
+    let m = regex.Match(line)
 
-  let parse filename =
-    let parseLine line =
-      let m = regex.Match(line)
+    { direction = m.Groups["dir"].Value |> Direction.parse
+      distance = Convert.ToInt64(m.Groups["dist"].Value, fromBase) }
 
-      { direction = m.Groups["dir"].Value |> Direction.parse
-        distance = Int32.Parse(m.Groups["dist"].Value)
-        color = Convert.ToInt32(m.Groups["color"].Value, 16) }
+  let parseLineWithBug =
+    parseLine (Regex("^(?<dir>.) (?<dist>\d+) \(#(?<color>\w{6})\)$")) 10
 
-    filename |> File.ReadAllLines |> Array.map parseLine
+  let parseLineCorrected =
+    parseLine (Regex("^. \d+ \(#(?<dist>\w{5})(?<dir>\w)\)$")) 16
+
+  let parse parseLineFunc =
+    File.ReadAllLines >> Array.map parseLineFunc
