@@ -3,6 +3,8 @@ namespace Day18
 open System
 open System.IO
 open System.Text.RegularExpressions
+open AdventOfCode2023.Common
+open Functools
 
 type Direction =
   | Up
@@ -45,16 +47,16 @@ module DigPlan =
   let toVertices plan = Array.scan runInstruction (0, 0) plan
 
   let findArea vertices =
-    Array.pairwise vertices
-    |> Array.sumBy (fun ((x1, y1), (x2, y2)) -> x1 * y2 - x2 * y1)
+    vertices
+    |> Array.pairwise
+    |> Array.sumBy (uncurry Vector2d.determinant)
     |> fun x -> (abs x) / 2
 
   let findPerimeter vertices =
-    Array.pairwise vertices
-    |> Array.sumBy (fun ((x1, y1), (x2, y2)) -> abs (x2 - x1) + abs (y2 - y1))
+    vertices |> Array.pairwise |> Array.sumBy (uncurry Vector2d.length)
 
   let dugOutArea plan : int =
-    let vertices = plan |> toVertices
+    let vertices = toVertices plan
     let area = findArea vertices
     let perimeter = findPerimeter vertices
     area + (perimeter / 2) + 1

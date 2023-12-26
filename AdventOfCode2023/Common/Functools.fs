@@ -2,6 +2,8 @@ module AdventOfCode2023.Common.Functools
 
 open System.Collections.Generic
 
+let uncurry f (a, b) = f a b
+
 let memoize f =
   let dict = Dictionary<_, _>()
 
