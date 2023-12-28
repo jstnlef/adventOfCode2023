@@ -7,7 +7,7 @@ open Xunit
 [<InlineData("Day20/testInput2.txt", 11687500)>]
 [<InlineData("Day20/input.txt", -1)>]
 let ``Multiply the total number of low pulses and high pulses`` (filename: string, expected: int64) =
-  let result = 0
+  let result = filename |> ModuleConfig.parse |> ModuleConfig.countPulses
   Assert.Equal(expected, result)
 
 
