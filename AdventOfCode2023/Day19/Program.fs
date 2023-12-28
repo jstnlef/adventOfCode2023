@@ -68,9 +68,18 @@ type Workflow =
     defaultTransition: Transition }
 
 module Workflow =
-  let evaluate part (workflows: Map<string, Workflow>) : Transition =
-    let firstWorkflow = workflows["in"]
-    Rejected
+  let evaluate part (workflows: Map<string, Workflow>) =
+    let rec evaluateWithWorkflow workflow =
+      let transition =
+        match Array.tryFind (Rule.evaluate part) workflow.rules with
+        | Some(r) -> r.transition
+        | None -> workflow.defaultTransition
+
+      match transition with
+      | Rule(name) -> evaluateWithWorkflow workflows[name]
+      | t -> t
+
+    evaluateWithWorkflow workflows["in"]
 
   let regex =
     Regex("^(?<name>\w+){(?:(?<cat>\w)(?<op>[<|>])(?<num>\d+):(?<transition>\w+),*)+(?<defaultTransition>\w+)}$")
