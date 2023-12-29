@@ -12,8 +12,7 @@ let ``Multiply the total number of low pulses and high pulses`` (filename: strin
 
 
 [<Theory>]
-[<InlineData("Day20/testInput.txt", -1)>]
 [<InlineData("Day20/input.txt", -1)>]
-let ``test 2`` (filename: string, expected: int) =
-  let result = 0
+let ``Fewest button pushes to "rx"`` (filename: string, expected: int) =
+  let result = filename |> Modules.parse |> Modules.fewestButtonPushesToRx
   Assert.Equal(expected, result)

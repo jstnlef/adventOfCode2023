@@ -4,15 +4,6 @@ open System.Collections.Generic
 open System.IO
 open System.Text.RegularExpressions
 
-type Broadcaster = { name: string; outputs: string array }
-
-type FlipFlop =
-  { name: string
-    isOn: bool
-    outputs: string array }
-
-  member this.Toggle() = { this with isOn = not this.isOn }
-
 type Voltage =
   | High
   | Low
@@ -21,6 +12,15 @@ type Pulse =
   { src: string
     dest: string
     voltage: Voltage }
+
+type Broadcaster = { name: string; outputs: string array }
+
+type FlipFlop =
+  { name: string
+    isOn: bool
+    outputs: string array }
+
+  member this.Toggle() = { this with isOn = not this.isOn }
 
 type Conjunction =
   { name: string
@@ -35,7 +35,7 @@ type Conjunction =
             (fun maybeCharge ->
               match maybeCharge with
               | Some _ -> Some(pulse.voltage)
-              | None -> failwith "unknown input!")
+              | None -> failwith "Unknown input!")
             this.memory }
 
 type Module =
@@ -49,14 +49,20 @@ type State =
   { pulses: Queue<Pulse>
     modules: Modules
     lowPulseCount: int
-    highPulseCount: int }
+    highPulseCount: int
+    buttonPushes: int
+    lowToRx: bool }
 
   member this.PushButton() =
-    this.SendPulse(
-      { src = "button"
-        dest = "broadcaster"
-        voltage = Low }
-    )
+    let updated =
+      this.SendPulse(
+        { src = "button"
+          dest = "broadcaster"
+          voltage = Low }
+      )
+
+    { updated with
+        buttonPushes = this.buttonPushes + 1 }
 
   member this.SendPulse(pulse: Pulse) =
     this.pulses.Enqueue(pulse)
@@ -78,7 +84,9 @@ module Modules =
     { pulses = Queue()
       modules = modules
       lowPulseCount = 0
-      highPulseCount = 0 }
+      highPulseCount = 0
+      buttonPushes = 0
+      lowToRx = false }
 
   let doBroadcast (broadcast: Broadcaster) state =
     broadcast.outputs
@@ -127,11 +135,14 @@ module Modules =
       (state.UpdateModule(updated.name, Conjunction(updated)))
 
   let processPulse pulse state =
-    match Map.tryFind pulse.dest state.modules with
-    | None -> state
-    | Some(Broadcaster b) -> doBroadcast b state
-    | Some(FlipFlop f) -> doFlipFlop f pulse state
-    | Some(Conjunction c) -> doConjunction c pulse state
+    if pulse.dest = "rx" && pulse.voltage = Low then
+      { state with lowToRx = true }
+    else
+      match Map.tryFind pulse.dest state.modules with
+      | None -> state
+      | Some(Broadcaster b) -> doBroadcast b state
+      | Some(FlipFlop f) -> doFlipFlop f pulse state
+      | Some(Conjunction c) -> doConjunction c pulse state
 
   let pushButton (initial: State) _ =
     let mutable state = initial.PushButton()
@@ -146,6 +157,13 @@ module Modules =
     seq { 0..999 }
     |> Seq.fold pushButton (init modules)
     |> (fun s -> s.lowPulseCount * s.highPulseCount)
+
+  let fewestButtonPushesToRx modules =
+    Seq.initInfinite ((+) 0)
+    |> Seq.scan pushButton (init modules)
+    |> Seq.takeWhile (fun s -> not s.lowToRx)
+    |> Seq.last
+    |> _.buttonPushes
 
   let lineRegex =
     Regex("^(?<modType>broadcaster|[%|&])(?<name>\w+)* ->(?: (?<output>\w+),*)+$")
